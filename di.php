@@ -6,21 +6,39 @@
  * Time: 23:07
  */
 
-abstract class Ligavel{
-    public $ligado = false;
-}
+/*Vai autenticar por email e senha
+ *Se Login der certo retorna true
+ *      Logar tentativa de login
+ *      Vai ter de armazenar usuario e senha na sessão
+ *Se der errado
+ *      Mandar email pro usuario
+ *      Logar tentativa de login
+*/
 
-class Motor extends Ligavel{
-    public function ligar(){
-        $this->ligado = true;
+class Autenticacao{
+    public function autenticar($email, $senha){
+
+        $logger = new SystemLog();
+        $dados = new UsuariosDados();
+        $correto = $dados->buscarEmailSenha($email, $senha);
+
+        if($correto){
+            $_SESSION['user'] = $email;
+            $logger->success('Login para ' . $email);
+            return $correto;
+        }
+
+        $enviadorEmail = new EnviadorEmail();
+        $enviadorEmail->enviar($email);
+
+
+        $logger->warning('Tentativa de login falha para '. $email);
     }
 }
 
-class Carro extends Ligavel{
-    function ligar(){
-        $this->ligado = true;
-    }
+$auth = new Autenticacao();
+if($auth->autenticar($email, $senha)){
+    header('Location: admin/index.php');
+}else {
+    echo 'Deu errado';
 }
-
-$carro = new Carro();
-$carro->ligar();
